@@ -11,6 +11,7 @@ namespace DLToolkitControlsSamples
 		public TagEntryViewExamplePageModel()
 		{
 			RemoveTagCommand = new BaseCommand<TagItem>((arg) => RemoveTag(arg));
+			TagValidator = new DelegateTagValidator(ValidateAndReturn);
 		}
 
 		public void ReloadTags()
@@ -37,7 +38,7 @@ namespace DLToolkitControlsSamples
 			Items.Remove(tagItem);
 		}
 
-		public TagItem ValidateAndReturn(string tag)
+		TagItem ValidateAndReturn(string tag)
 		{
 			if (string.IsNullOrWhiteSpace(tag))
 				return null;
@@ -65,6 +66,8 @@ namespace DLToolkitControlsSamples
 			set { SetField(value); }
 		}
 
+		public DelegateTagValidator TagValidator { get; }
+
 		public class TagItem : BaseModel
 		{
 			string name;
@@ -73,6 +76,21 @@ namespace DLToolkitControlsSamples
 				get { return name; }
 				set { SetField(ref name, value); }
 			}
+		}
+	}
+
+	public class DelegateTagValidator : DLToolkit.Forms.Controls.ITagValidator
+	{
+		Func<string, object> _validate;
+
+		public DelegateTagValidator(Func<string, object> validate)
+		{
+			_validate = validate;
+		}
+
+		public object ValidateAndCreate(string tag)
+		{
+			return _validate(tag);
 		}
 	}
 }

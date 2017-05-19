@@ -32,9 +32,9 @@ namespace DLToolkit.Forms.Controls
 					tag = tag.Replace(item, string.Empty);
 				}
 
-				var tagBindingContext = TagValidatorFactory(tag);
+				var tagBindingContext = TagValidator?.ValidateAndCreate(tag); //TagValidatorFactory(tag);
 				var tagEntry = sender as TagEntry;
-	
+
 				if (tagBindingContext != null)
 				{
 					TagItems.Add(tagBindingContext);
@@ -311,6 +311,18 @@ namespace DLToolkit.Forms.Controls
 				tagItems.CollectionChanged -= TagItemsCollectionChanged;
 			}
 		}
+
+		#region ACS
+
+		public static readonly BindableProperty TagValidatorProperty = BindableProperty.Create(nameof(TagValidator), typeof(ITagValidator), typeof(TagEntryView));
+
+		public ITagValidator TagValidator
+		{
+			get { return (ITagValidator)GetValue(TagValidatorProperty); }
+			set { SetValue(TagValidatorProperty, value); }
+		}
+
+		#endregion
 	}
 }
 

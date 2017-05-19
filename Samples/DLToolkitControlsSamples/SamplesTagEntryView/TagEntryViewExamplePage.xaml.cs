@@ -10,8 +10,8 @@ namespace DLToolkitControlsSamples
 		public TagEntryViewExamplePage()
 		{
 			Resources = new ResourceDictionary();
-			Resources.Add("TagValidatorFactory", new Func<string, object>(
-				(arg) => (BindingContext as TagEntryViewExamplePageModel)?.ValidateAndReturn(arg)));
+			//Resources.Add("TagValidatorFactory", new Func<string, object>(
+			//	(arg) => (BindingContext as TagEntryViewExamplePageModel)?.ValidateAndReturn(arg)));
 
 			InitializeComponent();
 		}
