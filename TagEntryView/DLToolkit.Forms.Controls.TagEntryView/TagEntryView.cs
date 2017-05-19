@@ -17,9 +17,9 @@ namespace DLToolkit.Forms.Controls
 			PropertyChanged += TagEntryViewPropertyChanged;
 			PropertyChanging += TagEntryViewPropertyChanging;
 
-			TagEntry = new TagEntry();
-			TagEntry.TextChanged += TagEntryTextChanged;
-			Children.Add(TagEntry);
+			//TagEntry = new TagEntry();
+			//TagEntry.TextChanged += TagEntryTextChanged;
+			//Children.Add(TagEntry);
 		}
 
 		void TagEntryTextChanged (object sender, TextChangedEventArgs e)
@@ -33,7 +33,7 @@ namespace DLToolkit.Forms.Controls
 				}
 
 				var tagBindingContext = TagValidator?.ValidateAndCreate(tag); //TagValidatorFactory(tag);
-				var tagEntry = sender as TagEntry;
+				var tagEntry = sender as Entry;
 
 				if (tagBindingContext != null)
 				{
@@ -320,6 +320,34 @@ namespace DLToolkit.Forms.Controls
 		{
 			get { return (ITagValidator)GetValue(TagValidatorProperty); }
 			set { SetValue(TagValidatorProperty, value); }
+		}
+
+		public static readonly BindableProperty EntryTemplateProperty = BindableProperty.Create(nameof(TagItemTemplate), typeof(DataTemplate), typeof(TagEntryView), default(DataTemplate)
+		                                                                                        ,propertyChanged:OnEntryTemplateChanged);
+
+		public DataTemplate EntryTemplate
+		{
+			get { return (DataTemplate)GetValue(EntryTemplateProperty); }
+			set { SetValue(EntryTemplateProperty, value); }
+		}
+
+		static void OnEntryTemplateChanged(BindableObject obj, object oldValue, object newValue)
+		{
+			((TagEntryView)obj).OnEntryTemplateChanged((DataTemplate)newValue);
+		}
+
+		void OnEntryTemplateChanged(DataTemplate template)
+		{
+			if (TagEntry != null)
+			{
+				TagEntry.TextChanged -= TagEntryTextChanged;
+				Children.Remove(TagEntry);
+			}
+			TagEntry = (Entry)template.CreateContent();
+			TagEntry.BindingContext = BindingContext;
+			TagEntry.TextChanged += TagEntryTextChanged;
+			Children.Add(TagEntry);
+			ForceLayout();
 		}
 
 		#endregion

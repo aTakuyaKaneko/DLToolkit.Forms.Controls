@@ -14,7 +14,7 @@ using Android.Util;
 using DLToolkit.Forms.Controls;
 using DLToolkitControlsSamples.Droid;
 
-[assembly: ExportRenderer(typeof(TagEntry), typeof(TagEntryRenderer))]
+[assembly: ExportRenderer(typeof(Entry), typeof(TagEntryRenderer))]
 namespace DLToolkitControlsSamples.Droid
 {
 	[Activity(Label = "DLToolkitControlsSamples.Droid", Icon = "@drawable/icon", Theme = "@style/MyTheme", MainLauncher = true, ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation)]
