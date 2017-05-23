@@ -172,6 +172,10 @@ namespace DLToolkit.Forms.Controls
 
 		public void ForceReload()
 		{
+			if (TagItems == null)
+			{
+				return;
+			}
 			Children.Clear();
 
 			for (int i = 0; i < TagItems.Count; i++)
@@ -231,8 +235,13 @@ namespace DLToolkit.Forms.Controls
 
 			foreach (var item in Children)    
 			{
-				var size = item.GetSizeRequest(widthConstraint, heightConstraint);
+				var size = item.Measure(widthConstraint, heightConstraint);
 				height = Math.Max (height, size.Request.Height);
+				if (item == TagEntry)
+				{
+					size.Minimum = new Size(EntryMinimumWidth, size.Minimum.Height);
+					size.Request = new Size(Math.Max(size.Request.Width, EntryMinimumWidth), size.Request.Height);
+				}
 
 				var newWidth = width + size.Request.Width + Spacing;
 				if (newWidth > widthConstraint) {
@@ -250,6 +259,14 @@ namespace DLToolkit.Forms.Controls
 				width = Math.Max(width, widthUsed);
 				height = (height + Spacing) * rowCount - Spacing; // via MitchMilam 
 			}
+			if (double.IsPositiveInfinity(widthConstraint))
+			{
+				width = 1200;
+			}
+			else if (width < widthConstraint)
+			{
+				width = widthConstraint;
+			}
 
 			return new SizeRequest(new Size(width, height), new Size(minWidth,minHeight));
 		}
@@ -261,7 +278,7 @@ namespace DLToolkit.Forms.Controls
 
 			foreach (var child in Children.Where(c => c.IsVisible)) 
 			{
-				var request = child.GetSizeRequest (width, height);
+				var request = child.Measure (width, height);
 
 				double childWidth = request.Request.Width;
 				double childHeight = request.Request.Height;
@@ -271,7 +288,7 @@ namespace DLToolkit.Forms.Controls
 				{
 					childWidth = EntryMinimumWidth;
 
-					if (xPos + childWidth < width)
+					if (xPos + childWidth <= width)
 					{
 						var orgEntrySize = childWidth;
 						childWidth = width - xPos;
