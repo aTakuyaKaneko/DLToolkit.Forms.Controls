@@ -3,11 +3,9 @@
 		xmlns:dltag="clr-namespace:DLToolkit.Forms.Controls;assembly=DLToolkit.Forms.Controls.TagEntryView">
 	<ContentPage.Content>
 		<dltag:TagEntryView TagItems="{Binding Items}" TagTappedCommand="{Binding RemoveTagCommand}" TagValidator="{Binding TagValidator}" Padding="8">
-			<dltag:TagEntryView.EntryTemplate>
-				<DataTemplate>
-					<Entry Keyboard="Email" />
-				</DataTemplate>
-			</dltag:TagEntryView.EntryTemplate>
+			<dltag:TagEntryView.TagEntry>
+				<Entry Keyboard="Email" />
+			</dltag:TagEntryView.TagEntry>
 			<dltag:TagEntryView.TagItemTemplate>
 				<DataTemplate>
 					<Frame BackgroundColor="Silver" OutlineColor="Navy" Padding="10" HasShadow="false">

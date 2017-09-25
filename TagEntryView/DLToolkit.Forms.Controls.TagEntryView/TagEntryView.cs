@@ -52,7 +52,7 @@ namespace DLToolkit.Forms.Controls
 			
 		public event EventHandler<ItemTappedEventArgs> TagTapped;
 
-		public Entry TagEntry { get; private set; }
+		//public Entry TagEntry { get; private set; }
 
 		protected virtual void PerformTagTap(View view, object item)
 		{
@@ -339,31 +339,37 @@ namespace DLToolkit.Forms.Controls
 			set { SetValue(TagValidatorProperty, value); }
 		}
 
-		public static readonly BindableProperty EntryTemplateProperty = BindableProperty.Create(nameof(TagItemTemplate), typeof(DataTemplate), typeof(TagEntryView), default(DataTemplate)
-		                                                                                        ,propertyChanged:OnEntryTemplateChanged);
+		public static readonly BindableProperty TagEntryProperty = BindableProperty.Create(
+			nameof(TagEntry),
+			typeof(Entry),
+			typeof(TagEntryView),
+			default(Entry), 
+			propertyChanged: OnTagEntryChanged);
 
-		public DataTemplate EntryTemplate
+		public Entry TagEntry
 		{
-			get { return (DataTemplate)GetValue(EntryTemplateProperty); }
-			set { SetValue(EntryTemplateProperty, value); }
+			get { return (Entry)GetValue(TagEntryProperty); }
+			set { SetValue(TagEntryProperty, value); }
 		}
 
-		static void OnEntryTemplateChanged(BindableObject obj, object oldValue, object newValue)
+		static void OnTagEntryChanged(BindableObject obj, object oldValue, object newValue)
 		{
-			((TagEntryView)obj).OnEntryTemplateChanged((DataTemplate)newValue);
+			((TagEntryView)obj).OnEntryChanged((Entry)oldValue, (Entry)newValue);
 		}
 
-		void OnEntryTemplateChanged(DataTemplate template)
+		void OnEntryChanged(Entry oldValue, Entry newValue)
 		{
-			if (TagEntry != null)
+			if (oldValue != null)
 			{
-				TagEntry.TextChanged -= TagEntryTextChanged;
-				Children.Remove(TagEntry);
+				oldValue.TextChanged -= TagEntryTextChanged;
+				Children.Remove(oldValue);
 			}
-			TagEntry = (Entry)template.CreateContent();
-			TagEntry.BindingContext = BindingContext;
-			TagEntry.TextChanged += TagEntryTextChanged;
-			Children.Add(TagEntry);
+			if (newValue != null)
+			{
+				newValue.TextChanged += TagEntryTextChanged;
+				SetInheritedBindingContext(newValue, BindingContext);
+				Children.Add(newValue);
+			}
 			ForceLayout();
 		}
 
