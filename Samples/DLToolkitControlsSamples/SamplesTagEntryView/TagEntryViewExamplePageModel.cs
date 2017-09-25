@@ -12,6 +12,7 @@ namespace DLToolkitControlsSamples
 		{
 			RemoveTagCommand = new BaseCommand<TagItem>((arg) => RemoveTag(arg));
 			TagValidator = new DelegateTagValidator(ValidateAndReturn);
+			AddCommand = new BaseCommand(_ => AddItem());
 		}
 
 		public void ReloadTags()
@@ -56,8 +57,8 @@ namespace DLToolkitControlsSamples
 
 		public IBaseCommand RemoveTagCommand
 		{
-			get { return GetField<IBaseCommand>(); }
-			set { SetField(value); }
+			get { return GetField<IBaseCommand>(nameof(RemoveTagCommand)); }
+			set { SetField(value, nameof(RemoveTagCommand)); }
 		}
 
 		public ObservableCollection<TagItem> Items
@@ -67,6 +68,17 @@ namespace DLToolkitControlsSamples
 		}
 
 		public DelegateTagValidator TagValidator { get; }
+
+		public IBaseCommand AddCommand
+		{
+			get { return GetField<IBaseCommand>(nameof(AddCommand)); }
+			set { SetField(value, nameof(AddCommand)); }
+		}
+
+		void AddItem()
+		{
+			Items.Add(new TagItem { Name = "#add" });
+		}
 
 		public class TagItem : BaseModel
 		{

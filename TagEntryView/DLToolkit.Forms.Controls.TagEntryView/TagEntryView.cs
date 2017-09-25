@@ -22,8 +22,12 @@ namespace DLToolkit.Forms.Controls
 			//Children.Add(TagEntry);
 		}
 
-		void TagEntryTextChanged (object sender, TextChangedEventArgs e)
+		protected virtual void TagEntryTextChanged (object sender, TextChangedEventArgs e)
 		{
+			if (e.NewTextValue == null)
+			{
+				return;
+			}
 			if (TagSeparators.Any(e.NewTextValue.Contains))
 			{
 				string tag = e.NewTextValue;
@@ -259,14 +263,14 @@ namespace DLToolkit.Forms.Controls
 				width = Math.Max(width, widthUsed);
 				height = (height + Spacing) * rowCount - Spacing; // via MitchMilam 
 			}
-			if (double.IsPositiveInfinity(widthConstraint))
-			{
-				width = 1200;
-			}
-			else if (width < widthConstraint)
-			{
-				width = widthConstraint;
-			}
+			//if (double.IsPositiveInfinity(widthConstraint))
+			//{
+			//	width = 1200;
+			//}
+			//else if (width < widthConstraint)
+			//{
+			//	width = widthConstraint;
+			//}
 
 			return new SizeRequest(new Size(width, height), new Size(minWidth,minHeight));
 		}
@@ -317,7 +321,11 @@ namespace DLToolkit.Forms.Controls
 
 		public void Dispose()
 		{
-			TagEntry.TextChanged -= TagEntryTextChanged;
+			var entry = FindEntry();
+			if (entry != null)
+			{
+				entry.TextChanged -= TagEntryTextChanged;
+			}
 
 			PropertyChanged -= TagEntryViewPropertyChanged;
 			PropertyChanging -= TagEntryViewPropertyChanging;
@@ -341,36 +349,71 @@ namespace DLToolkit.Forms.Controls
 
 		public static readonly BindableProperty TagEntryProperty = BindableProperty.Create(
 			nameof(TagEntry),
-			typeof(Entry),
+			typeof(View),
 			typeof(TagEntryView),
-			default(Entry), 
+			default(View), 
 			propertyChanged: OnTagEntryChanged);
 
-		public Entry TagEntry
+		public View TagEntry
 		{
-			get { return (Entry)GetValue(TagEntryProperty); }
+			get { return (View)GetValue(TagEntryProperty); }
 			set { SetValue(TagEntryProperty, value); }
 		}
 
 		static void OnTagEntryChanged(BindableObject obj, object oldValue, object newValue)
 		{
-			((TagEntryView)obj).OnEntryChanged((Entry)oldValue, (Entry)newValue);
+			((TagEntryView)obj).OnEntryChanged((View)oldValue, (View)newValue);
 		}
 
-		void OnEntryChanged(Entry oldValue, Entry newValue)
+		void OnEntryChanged(View oldValue, View newValue)
 		{
 			if (oldValue != null)
 			{
-				oldValue.TextChanged -= TagEntryTextChanged;
+				var oldEntry = FindEntry(oldValue);
+				if (oldEntry != null)
+				{
+					oldEntry.TextChanged -= TagEntryTextChanged;
+				}
 				Children.Remove(oldValue);
 			}
 			if (newValue != null)
 			{
-				newValue.TextChanged += TagEntryTextChanged;
+				var newEntry = FindEntry(newValue);
+				if (newEntry != null)
+				{
+					newEntry.TextChanged += TagEntryTextChanged;
+				}
 				SetInheritedBindingContext(newValue, BindingContext);
 				Children.Add(newValue);
 			}
 			ForceLayout();
+		}
+
+		protected Entry FindEntry() => FindEntry(TagEntry);
+
+		protected Entry FindEntry(View view)
+		{
+			if (view is Entry)
+			{
+				return (Entry)view;
+			}
+			if (view is Layout<View>)
+			{
+				var children = ((Layout<View>)view).Children;
+				return (Entry)children.FirstOrDefault(child => child is Entry);
+			}
+			return null;
+		}
+
+		protected override void OnBindingContextChanged()
+		{
+			base.OnBindingContextChanged();
+
+			var entry = TagEntry;
+			if (entry != null)
+			{
+				SetInheritedBindingContext(entry, BindingContext);
+			}
 		}
 
 		#endregion

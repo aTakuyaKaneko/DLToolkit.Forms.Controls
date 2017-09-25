@@ -4,7 +4,10 @@
 	<ContentPage.Content>
 		<dltag:TagEntryView TagItems="{Binding Items}" TagTappedCommand="{Binding RemoveTagCommand}" TagValidator="{Binding TagValidator}" Padding="8">
 			<dltag:TagEntryView.TagEntry>
-				<Entry Keyboard="Email" />
+				<StackLayout Orientation="Horizontal">
+					<Entry Keyboard="Email" HorizontalOptions="FillAndExpand" />
+					<Button Text="Add" WidthRequest="32" HeightRequest="24" Command="{Binding AddCommand}"/>
+				</StackLayout>
 			</dltag:TagEntryView.TagEntry>
 			<dltag:TagEntryView.TagItemTemplate>
 				<DataTemplate>
