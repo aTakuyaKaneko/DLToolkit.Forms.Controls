@@ -54,7 +54,7 @@ namespace DLToolkit.Forms.Controls
 
 		public Entry TagEntry { get; private set; }
 
-		internal void PerformTagTap(object item)
+		protected virtual void PerformTagTap(View view, object item)
 		{
 			EventHandler<ItemTappedEventArgs> handler = TagTapped;
 			if (handler != null) handler(this, new ItemTappedEventArgs(null, item));
@@ -196,7 +196,7 @@ namespace DLToolkit.Forms.Controls
 				view.BindingContext = TagItems[i];
 
 				view.GestureRecognizers.Add(new TapGestureRecognizer(){
-					Command = new Command(() => PerformTagTap(view.BindingContext))
+					Command = new Command(() => PerformTagTap(view, view.BindingContext))
 				});
 
 				Children.Add(view);
