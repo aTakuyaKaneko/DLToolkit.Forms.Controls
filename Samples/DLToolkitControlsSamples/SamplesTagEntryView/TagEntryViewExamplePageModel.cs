@@ -80,6 +80,8 @@ namespace DLToolkitControlsSamples
 			Items.Add(new TagItem { Name = "#add" });
 		}
 
+		public string Label { get; } = "Tags";
+
 		public class TagItem : BaseModel
 		{
 			string name;

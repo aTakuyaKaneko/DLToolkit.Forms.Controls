@@ -182,6 +182,11 @@ namespace DLToolkit.Forms.Controls
 			}
 			Children.Clear();
 
+			if (Label?.IsVisible ?? false)
+			{
+				Children.Add(Label);
+			}
+
 			for (int i = 0; i < TagItems.Count; i++)
 			{
 				View view = null;
@@ -389,6 +394,38 @@ namespace DLToolkit.Forms.Controls
 			ForceLayout();
 		}
 
+		public static readonly BindableProperty LabelProperty = BindableProperty.Create(
+			nameof(Label),
+			typeof(View),
+			typeof(TagEntryView),
+			default(View),
+			propertyChanged: OnLabelChanged);
+
+		public View Label
+		{
+			get { return (View)GetValue(LabelProperty); }
+			set { SetValue(LabelProperty, value); }
+		}
+
+		static void OnLabelChanged(BindableObject obj, object oldValue, object newValue)
+		{
+			((TagEntryView)obj).OnLabelChanged((View)oldValue, (View)newValue);
+		}
+
+		void OnLabelChanged(View oldValue, View newValue)
+		{
+			if (oldValue != null)
+			{
+				Children.Remove(oldValue);
+			}
+			if (newValue != null)
+			{
+				SetInheritedBindingContext(newValue, BindingContext);
+				Children.Insert(0, newValue);
+			}
+			ForceLayout();
+		}
+
 		protected Entry FindEntry() => FindEntry(TagEntry);
 
 		protected Entry FindEntry(View view)
@@ -413,6 +450,11 @@ namespace DLToolkit.Forms.Controls
 			if (entry != null)
 			{
 				SetInheritedBindingContext(entry, BindingContext);
+			}
+			var label = Label;
+			if (label != null)
+			{
+				SetInheritedBindingContext(label, BindingContext);
 			}
 		}
 
