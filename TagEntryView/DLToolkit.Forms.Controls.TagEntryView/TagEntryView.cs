@@ -234,6 +234,7 @@ namespace DLToolkit.Forms.Controls
 
 		private SizeRequest DoHorizontalMeasure(double widthConstraint, double heightConstraint)
 		{
+			//System.Diagnostics.Debug.WriteLine($"TagEntry: Measure: wc={widthConstraint}, hc={heightConstraint}");
 			int rowCount = 1;
 
 			double width = 0;
@@ -268,6 +269,9 @@ namespace DLToolkit.Forms.Controls
 				width = Math.Max(width, widthUsed);
 				height = (height + Spacing) * rowCount - Spacing; // via MitchMilam 
 			}
+
+			//System.Diagnostics.Debug.WriteLine($"TagEntry: Measure: w={width}, h={height}, rows={rowCount}");
+
 			//if (double.IsPositiveInfinity(widthConstraint))
 			//{
 			//	width = 1200;
@@ -282,6 +286,7 @@ namespace DLToolkit.Forms.Controls
 
 		protected override void LayoutChildren (double x, double y, double width, double height)
 		{
+			//System.Diagnostics.Debug.WriteLine($"TagEntry: Layout: x={x}, y={y}, w={width}, h={height}");
 			double rowHeight = 0;
 			double yPos = y, xPos = x;
 
@@ -316,6 +321,7 @@ namespace DLToolkit.Forms.Controls
 					xPos = x;
 					yPos += rowHeight + Spacing;
 					rowHeight = 0;
+					//System.Diagnostics.Debug.WriteLine($"TagEntry: Layout: newline: y={yPos}");
 				}
 
 				var region = new Rectangle(xPos, yPos, childWidth, childHeight);
