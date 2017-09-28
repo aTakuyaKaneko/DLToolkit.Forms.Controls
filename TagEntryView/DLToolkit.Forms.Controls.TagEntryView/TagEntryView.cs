@@ -22,7 +22,7 @@ namespace DLToolkit.Forms.Controls
 			//Children.Add(TagEntry);
 		}
 
-		protected virtual void TagEntryTextChanged (object sender, TextChangedEventArgs e)
+		protected virtual void TagEntryTextChanged(object sender, TextChangedEventArgs e)
 		{
 			if (e.NewTextValue == null)
 			{
@@ -53,7 +53,7 @@ namespace DLToolkit.Forms.Controls
 				tagEntry.Focus();
 			}
 		}
-			
+
 		public event EventHandler<ItemTappedEventArgs> TagTapped;
 
 		//public Entry TagEntry { get; private set; }
@@ -64,7 +64,7 @@ namespace DLToolkit.Forms.Controls
 			if (handler != null) handler(this, new ItemTappedEventArgs(null, item));
 
 			var command = TagTappedCommand;
-			if (command != null && command.CanExecute(item)) 
+			if (command != null && command.CanExecute(item))
 			{
 				command.Execute(item);
 			}
@@ -115,7 +115,7 @@ namespace DLToolkit.Forms.Controls
 		public IList<string> TagSeparators
 		{
 			get { return (IList<string>)GetValue(TagSeparatorsProperty); }
-			set { SetValue(TagSeparatorsProperty, value); } 
+			set { SetValue(TagSeparatorsProperty, value); }
 		}
 
 
@@ -124,7 +124,7 @@ namespace DLToolkit.Forms.Controls
 		public double EntryMinimumWidth
 		{
 			get { return (double)GetValue(EntryMinimumWidthProperty); }
-			set { SetValue(EntryMinimumWidthProperty, value); } 
+			set { SetValue(EntryMinimumWidthProperty, value); }
 		}
 
 
@@ -133,17 +133,17 @@ namespace DLToolkit.Forms.Controls
 		public IList TagItems
 		{
 			get { return (IList)GetValue(TagItemsProperty); }
-			set { SetValue(TagItemsProperty, value); } 
+			set { SetValue(TagItemsProperty, value); }
 		}
 
 
-		public static readonly BindableProperty SpacingProperty = BindableProperty.Create(nameof(Spacing), typeof(double), typeof(TagEntryView), 6d, 
+		public static readonly BindableProperty SpacingProperty = BindableProperty.Create(nameof(Spacing), typeof(double), typeof(TagEntryView), 6d,
 				propertyChanged: (bindable, oldvalue, newvalue) => ((TagEntryView)bindable).OnSizeChanged());
 
-		public double Spacing 
+		public double Spacing
 		{
 			get { return (double)GetValue(SpacingProperty); }
-			set { SetValue(SpacingProperty, value); } 
+			set { SetValue(SpacingProperty, value); }
 		}
 
 
@@ -169,7 +169,7 @@ namespace DLToolkit.Forms.Controls
 			}
 		}
 
-		private void TagItemsCollectionChanged (object sender, NotifyCollectionChangedEventArgs e)
+		private void TagItemsCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
 		{
 			ForceReload();
 		}
@@ -204,7 +204,8 @@ namespace DLToolkit.Forms.Controls
 
 				view.BindingContext = TagItems[i];
 
-				view.GestureRecognizers.Add(new TapGestureRecognizer(){
+				view.GestureRecognizers.Add(new TapGestureRecognizer()
+				{
 					Command = new Command(() => PerformTagTap(view, view.BindingContext))
 				});
 
@@ -219,15 +220,15 @@ namespace DLToolkit.Forms.Controls
 			this.ForceLayout();
 		}
 
-		protected override SizeRequest OnSizeRequest (double widthConstraint, double heightConstraint)
+		protected override SizeRequest OnSizeRequest(double widthConstraint, double heightConstraint)
 		{
 			if (WidthRequest > 0)
-				widthConstraint = Math.Min (widthConstraint, WidthRequest);
+				widthConstraint = Math.Min(widthConstraint, WidthRequest);
 			if (HeightRequest > 0)
-				heightConstraint = Math.Min (heightConstraint, HeightRequest);
+				heightConstraint = Math.Min(heightConstraint, HeightRequest);
 
-			double internalWidth = double.IsPositiveInfinity (widthConstraint) ? double.PositiveInfinity : Math.Max (0, widthConstraint);
-			double internalHeight = double.IsPositiveInfinity (heightConstraint) ? double.PositiveInfinity : Math.Max (0, heightConstraint);
+			double internalWidth = double.IsPositiveInfinity(widthConstraint) ? double.PositiveInfinity : Math.Max(0, widthConstraint);
+			double internalHeight = double.IsPositiveInfinity(heightConstraint) ? double.PositiveInfinity : Math.Max(0, heightConstraint);
 
 			return DoHorizontalMeasure(internalWidth, internalHeight);
 		}
@@ -235,40 +236,40 @@ namespace DLToolkit.Forms.Controls
 		private SizeRequest DoHorizontalMeasure(double widthConstraint, double heightConstraint)
 		{
 			//System.Diagnostics.Debug.WriteLine($"TagEntry: Measure: wc={widthConstraint}, hc={heightConstraint}");
-			int rowCount = 1;
+			//int rowCount = 1;
 
-			double width = 0;
-			double height = 0;
-			double minWidth = 0;
-			double minHeight = 0;
-			double widthUsed = 0;
+			//double width = 0;
+			//double height = 0;
+			//double minWidth = 0;
+			//double minHeight = 0;
+			//double widthUsed = 0;
 
-			foreach (var item in Children)    
-			{
-				var size = item.Measure(widthConstraint, heightConstraint);
-				height = Math.Max (height, size.Request.Height);
-				if (item == TagEntry)
-				{
-					size.Minimum = new Size(EntryMinimumWidth, size.Minimum.Height);
-					size.Request = new Size(Math.Max(size.Request.Width, EntryMinimumWidth), size.Request.Height);
-				}
+			//foreach (var item in Children)    
+			//{
+			//	var size = item.Measure(widthConstraint, heightConstraint);
+			//	height = Math.Max (height, size.Request.Height);
+			//	if (item == TagEntry)
+			//	{
+			//		size.Minimum = new Size(EntryMinimumWidth, size.Minimum.Height);
+			//		size.Request = new Size(Math.Max(size.Request.Width, EntryMinimumWidth), size.Request.Height);
+			//	}
 
-				var newWidth = width + size.Request.Width + Spacing;
-				if (newWidth > widthConstraint) {
-					rowCount++;
-					widthUsed = Math.Max(width, widthUsed);
-					width = size.Request.Width;
-				} else
-					width = newWidth;
+			//	var newWidth = width + size.Request.Width + Spacing;
+			//	if (newWidth > widthConstraint) {
+			//		rowCount++;
+			//		widthUsed = Math.Max(width, widthUsed);
+			//		width = size.Request.Width;
+			//	} else
+			//		width = newWidth;
 
-				minHeight = Math.Max(minHeight, size.Minimum.Height);
-				minWidth = Math.Max (minWidth, size.Minimum.Width);
-			}
+			//	minHeight = Math.Max(minHeight, size.Minimum.Height);
+			//	minWidth = Math.Max (minWidth, size.Minimum.Width);
+			//}
 
-			if (rowCount > 1) {
-				width = Math.Max(width, widthUsed);
-				height = (height + Spacing) * rowCount - Spacing; // via MitchMilam 
-			}
+			//if (rowCount > 1) {
+			//	width = Math.Max(width, widthUsed);
+			//	height = (height + Spacing) * rowCount - Spacing; // via MitchMilam 
+			//}
 
 			//System.Diagnostics.Debug.WriteLine($"TagEntry: Measure: w={width}, h={height}, rows={rowCount}");
 
@@ -280,19 +281,58 @@ namespace DLToolkit.Forms.Controls
 			//{
 			//	width = widthConstraint;
 			//}
+			double rowHeight = 0;
+			double yPos = 0, xPos = 0;
 
-			return new SizeRequest(new Size(width, height), new Size(minWidth,minHeight));
+			foreach (var child in Children.Where(c => c.IsVisible))
+			{
+				var request = child.Measure(widthConstraint, heightConstraint);
+
+				double childWidth = request.Request.Width;
+				double childHeight = request.Request.Height;
+
+
+				if (child == TagEntry)
+				{
+					childWidth = EntryMinimumWidth;
+
+					if (xPos + childWidth <= widthConstraint)
+					{
+						var orgEntrySize = childWidth;
+						childWidth = widthConstraint - xPos;
+						childWidth = Math.Max(childWidth, orgEntrySize);
+					}
+					else
+					{
+						childWidth = widthConstraint;
+					}
+				}
+
+				rowHeight = Math.Max(rowHeight, childHeight);
+
+				if (xPos + childWidth > widthConstraint)
+				{
+					xPos = 0;
+					yPos += rowHeight + Spacing;
+					rowHeight = childHeight;
+				}
+				xPos += childWidth + Spacing;
+			}
+			double width = widthConstraint;
+			double height = yPos + rowHeight;
+
+			return new SizeRequest(new Size(width, height), new Size(width, height));
 		}
 
-		protected override void LayoutChildren (double x, double y, double width, double height)
+		protected override void LayoutChildren(double x, double y, double width, double height)
 		{
 			//System.Diagnostics.Debug.WriteLine($"TagEntry: Layout: x={x}, y={y}, w={width}, h={height}");
 			double rowHeight = 0;
 			double yPos = y, xPos = x;
 
-			foreach (var child in Children.Where(c => c.IsVisible)) 
+			foreach (var child in Children.Where(c => c.IsVisible))
 			{
-				var request = child.Measure (width, height);
+				var request = child.Measure(width, height);
 
 				double childWidth = request.Request.Width;
 				double childHeight = request.Request.Height;
@@ -316,7 +356,7 @@ namespace DLToolkit.Forms.Controls
 
 				rowHeight = Math.Max(rowHeight, childHeight);
 
-				if (xPos + childWidth > width) 
+				if (xPos + childWidth > width)
 				{
 					xPos = x;
 					yPos += rowHeight + Spacing;
@@ -362,7 +402,7 @@ namespace DLToolkit.Forms.Controls
 			nameof(TagEntry),
 			typeof(View),
 			typeof(TagEntryView),
-			default(View), 
+			default(View),
 			propertyChanged: OnTagEntryChanged);
 
 		public View TagEntry
