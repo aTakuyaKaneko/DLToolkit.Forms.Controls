@@ -290,7 +290,7 @@ namespace DLToolkit.Forms.Controls
 
 				double childWidth = request.Request.Width;
 				double childHeight = request.Request.Height;
-
+				rowHeight = Math.Max(rowHeight, childHeight);
 
 				if (child == TagEntry)
 				{
@@ -305,12 +305,12 @@ namespace DLToolkit.Forms.Controls
 					else
 					{
 						childWidth = widthConstraint;
+						xPos = 0;
+						yPos += rowHeight + Spacing;
+						rowHeight = childHeight;
 					}
 				}
-
-				rowHeight = Math.Max(rowHeight, childHeight);
-
-				if (xPos + childWidth > widthConstraint)
+				else if (xPos + childWidth > widthConstraint)
 				{
 					xPos = 0;
 					yPos += rowHeight + Spacing;
@@ -336,31 +336,33 @@ namespace DLToolkit.Forms.Controls
 
 				double childWidth = request.Request.Width;
 				double childHeight = request.Request.Height;
-
+				rowHeight = Math.Max(rowHeight, childHeight);
 
 				if (child == TagEntry)
 				{
 					childWidth = EntryMinimumWidth;
 
-					if (xPos + childWidth <= width)
+					if (xPos + childWidth <= x + width)
 					{
 						var orgEntrySize = childWidth;
-						childWidth = width - xPos;
+						childWidth = width - xPos + x;
 						childWidth = Math.Max(childWidth, orgEntrySize);
 					}
 					else
 					{
 						childWidth = width;
+						xPos = x;
+						yPos += rowHeight + Spacing;
+						rowHeight = childHeight;
 					}
+					// sometimes Entry run off the screen, so re-measure
+					child.Measure(childWidth, height);
 				}
-
-				rowHeight = Math.Max(rowHeight, childHeight);
-
-				if (xPos + childWidth > width)
+				else if (xPos + childWidth > x + width)
 				{
 					xPos = x;
 					yPos += rowHeight + Spacing;
-					rowHeight = 0;
+					rowHeight = childHeight;
 					//System.Diagnostics.Debug.WriteLine($"TagEntry: Layout: newline: y={yPos}");
 				}
 
