@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>Access.DLToolkit.Forms.Controls.TagEntryView</id>
-    <version>0.1.1</version>
+    <version>0.1.2</version>
     <authors>Daniel Luberda, ACCESS Co.,Ltd.</authors>
     <owners>Daniel Luberda, ACCESS Co.,Ltd.</owners>
     <licenseUrl>https://github.com/access-company/DLToolkit.Forms.Controls/blob/master/LICENSE</licenseUrl>
