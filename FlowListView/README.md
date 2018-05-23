@@ -1,4 +1,4 @@
-## ![](http://res.cloudinary.com/dqeaiomo8/image/upload/c_scale,w_50/v1444578527/DLToolkit/Forms-Controls-128.png) FlowListView for Xamarin.Forms [![PayPal donate button](http://img.shields.io/paypal/donate.png?color=green)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=VPZ4KHKHXXHR2 "Donate to this project using Paypal") [![Bitcoin donate button](http://img.shields.io/bitcoin/donate.png?color=green)](https://blockchain.info/address/16CvewT3QyAc5ATTVNHQ2EomxLQPXxyKQ7 "Donate to this project using Bitcoin")
+## ![](http://res.cloudinary.com/dqeaiomo8/image/upload/c_scale,w_50/v1444578527/DLToolkit/Forms-Controls-128.png) FlowListView for Xamarin.Forms [![PayPal donate button](http://img.shields.io/paypal/donate.png?color=green)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=VPZ4KHKHXXHR2 "Donate to this project using Paypal")
 
 ListView derivative with flowing, grid-like columns support.
 
@@ -9,6 +9,7 @@ NuGet: https://www.nuget.org/packages/DLToolkit.Forms.Controls.FlowListView/
 - Fixed or automatic column count
 - Grouping support
 - Columns can expand to empty space (configurable)
+- Infinite loading, empty group cell, customzed number of columns per group support. (thanks to @rudacs)
 - **ANY** View can be used as a cell
 - **All** Xamarin.Forms platforms supported
 
@@ -19,6 +20,20 @@ NuGet: https://www.nuget.org/packages/DLToolkit.Forms.Controls.FlowListView/
 <img src="https://raw.githubusercontent.com/daniel-luberda/DLToolkit.Forms.Controls/master/FlowListView/Screenshots/flowlistview_ios1.png" width="150"/> <img src="https://raw.githubusercontent.com/daniel-luberda/DLToolkit.Forms.Controls/master/FlowListView/Screenshots/flowlistview_ios2.png" width="150"/> <img src="https://raw.githubusercontent.com/daniel-luberda/DLToolkit.Forms.Controls/master/FlowListView/Screenshots/flowlistview_ios3.png" width="150"/>
 
 ## Simple Example:
+
+### Init
+
+Add the following to your App.xaml.cs
+
+```C#
+public App()
+{
+    InitializeComponent();
+    FlowListView.Init(); 
+}
+```
+
+### Sample
 
 ```XML
 <flv:FlowListView FlowColumnCount="3" SeparatorVisibility="None" HasUnevenRows="false"
@@ -42,7 +57,7 @@ For other examples see sample app: [FlowListView Examples](https://github.com/da
 
 #### How can I disable entire row highlighting when tapped? 
 
-Make a custom renderers for `FlowListViewInternalCell` in platforms specific projects which disable ListView row highlighting. Examples: [Android](https://github.com/daniel-luberda/DLToolkit.Forms.Controls/blob/master/Samples/Droid/Renderers/FlowListViewInternalCellRenderer.cs) [iOS](https://github.com/daniel-luberda/DLToolkit.Forms.Controls/blob/master/Samples/iOS/Renderers/FlowListViewInternalCellRenderer.cs)
+Make a custom renderers for `FlowListViewInternalCell` in platforms specific projects which disable ListView row highlighting. Examples: [Android](https://github.com/daniel-luberda/DLToolkit.Forms.Controls/blob/master/Samples/Droid/Renderers/FlowListViewInternalCellRenderer.cs) [iOS](https://github.com/daniel-luberda/DLToolkit.Forms.Controls/blob/master/Samples/iOS/Renderers/FlowListViewInternalCellRenderer.cs) [Windows](https://github.com/daniel-luberda/DLToolkit.Forms.Controls/blob/master/Samples/Windows/CustomListViewRenderer.cs)
 
 #### How can I have variable row height? (basing on content, different sizes for header and items)
 

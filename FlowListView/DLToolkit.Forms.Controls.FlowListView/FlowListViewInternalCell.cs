@@ -3,13 +3,16 @@ using Xamarin.Forms;
 using System.Collections.Generic;
 using System.Collections;
 using System.Threading.Tasks;
+using System.Collections.Specialized;
+using System.Reflection;
 
 namespace DLToolkit.Forms.Controls
 {
 	/// <summary>
 	/// Flow list view internal cell.
 	/// </summary>
-	public class FlowListViewInternalCell : ViewCell
+	[Helpers.FlowListView.Preserve(AllMembers = true)]
+    public class FlowListViewInternalCell : ViewCell
 	{
 		readonly WeakReference<FlowListView> _flowListViewRef;
 		readonly AbsoluteLayout _rootLayout;
@@ -53,8 +56,11 @@ namespace DLToolkit.Forms.Controls
 			}
 
 			_flowColumnTemplate = flowListView.FlowColumnTemplate;
-			_desiredColumnCount = flowListView.DesiredColumnCount;
+			_desiredColumnCount = flowListView.FlowDesiredColumnCount;
 			_flowColumnExpand = flowListView.FlowColumnExpand;
+
+			View.GestureRecognizers.Clear();
+			View.GestureRecognizers.Add(new TapGestureRecognizer());
 		}
 
 		private IList<DataTemplate> GetDataTemplates(IList container)
@@ -93,7 +99,7 @@ namespace DLToolkit.Forms.Controls
 			return templates;
 		}
 
-		private bool RowLayoutChanged(int containerCount, IList<DataTemplate> templates)
+		private bool RowLayoutChanged(int containerCount, IList<DataTemplate> templates, int columnCount)
 		{
 			// Check if desired number of columns is equal to current number of columns
 			if (_currentColumnTemplates == null || containerCount != _currentColumnTemplates.Count)
@@ -104,10 +110,18 @@ namespace DLToolkit.Forms.Controls
 			// Check if desired column view types are equal to current columns view types
 			for (int i = 0; i < containerCount; i++)
 			{
-				if (_currentColumnTemplates[i].GetType() != templates[i].GetType())
+                var currentTemplateType = _currentColumnTemplates[i].GetHashCode();
+                var templateType = templates[i].GetHashCode();
+
+                if (currentTemplateType != templateType)
 				{
 					return true;
 				}
+			}
+
+			if (_desiredColumnCount != columnCount)
+			{
+				return true;
 			}
 
 			return false;
@@ -332,23 +346,61 @@ namespace DLToolkit.Forms.Controls
 		{
 			base.OnBindingContextChanged();
 
-			var container = BindingContext as IList;
+			UpdateData();
 
+			var container = BindingContext as INotifyCollectionChanged;
+
+			if (container != null)
+			{
+				container.CollectionChanged -= Container_CollectionChanged;
+				container.CollectionChanged += Container_CollectionChanged;
+			}
+		}
+
+		private void Container_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+		{
+			UpdateData();
+		}
+
+		private void UpdateData()
+		{
+			var container = BindingContext as IList;
+			
 			if (container == null)
 				return;
+
+			var newDesiredColumnCount = 0;
 
 			FlowListView flowListView = null;
 			if (_flowListViewRef.TryGetTarget(out flowListView) && flowListView != null)
 			{
 				_flowColumnTemplate = flowListView.FlowColumnTemplate;
-				_desiredColumnCount = flowListView.DesiredColumnCount;
+				newDesiredColumnCount = flowListView.FlowDesiredColumnCount;
 				_flowColumnExpand = flowListView.FlowColumnExpand;
+			}
+
+			var flowGroupColumn = BindingContext as FlowGroupColumn;
+			if (flowGroupColumn != null)
+			{
+				newDesiredColumnCount = flowGroupColumn.ColumnCount;
 			}
 				
 			// Getting view types from templates
 			var containerCount = container.Count;
 			IList<DataTemplate> templates = GetDataTemplates(container);
-			bool layoutChanged = RowLayoutChanged(containerCount, templates);
+
+            bool layoutChanged = false;
+            if (flowGroupColumn != null && flowGroupColumn.ForceInvalidateColumns)
+            {
+                layoutChanged = true;
+                flowGroupColumn.ForceInvalidateColumns = false;
+            }
+            else
+            {
+                layoutChanged = RowLayoutChanged(containerCount, templates, newDesiredColumnCount);
+            }
+
+			_desiredColumnCount = newDesiredColumnCount;
 
 			if (!layoutChanged) // REUSE VIEWS
 			{
@@ -369,17 +421,6 @@ namespace DLToolkit.Forms.Controls
 			}
 			else // RECREATE COLUMNS
 			{
-				if (_useGridAsMainRoot)
-				{
-					if (_rootLayoutAuto.Children.Count > 0)
-						_rootLayoutAuto.Children.Clear();
-				}
-				else
-				{
-					if (_rootLayout.Children.Count > 0)
-						_rootLayout.Children.Clear();
-				}
-
 				_currentColumnTemplates = new List<DataTemplate>(templates);
 
 				if (_useGridAsMainRoot)
@@ -396,15 +437,11 @@ namespace DLToolkit.Forms.Controls
 
 					for (int i = 0; i < containerCount; i++)
 					{
-						var view = (View)templates[i].CreateContent();
+						var view = templates[i].CreateContent() as View;
+						if (view == null)
+							throw new InvalidCastException("DataTemplate must return a View");
 
-						view.GestureRecognizers.Add(new TapGestureRecognizer()
-						{
-							Command = new Command(async (obj) =>
-							{
-								await ExecuteTapGestureRecognizer(view);
-							})
-						});
+                        AddTapGestureToView(view);
 
 						SetBindingContextForView(view, container[i]);
 						if (containerCount == 0 || _desiredColumnCount == 0)
@@ -420,15 +457,11 @@ namespace DLToolkit.Forms.Controls
 
 					for (int i = 0; i < containerCount; i++)
 					{
-						var view = (View)templates[i].CreateContent();
+                        var view = templates[i].CreateContent() as View;
+                        if (view == null)
+                            throw new InvalidCastException("DataTemplate must return a View");
 
-						view.GestureRecognizers.Add(new TapGestureRecognizer()
-						{
-							Command = new Command(async (obj) =>
-							{
-								await ExecuteTapGestureRecognizer(view);
-							})
-						});
+                        AddTapGestureToView(view);
 
 						SetBindingContextForView(view, container[i]);
 						if (containerCount == 0 || _desiredColumnCount == 0)
@@ -439,6 +472,17 @@ namespace DLToolkit.Forms.Controls
 				}
 			}
 		}
+
+        void AddTapGestureToView(View view)
+        {
+            var command = new Command(async (obj) =>
+            {
+                await ExecuteTapGestureRecognizer(view);
+            });
+
+            view.GestureRecognizers.Add(new TapGestureRecognizer() { Command = command });
+            view.GestureRecognizers.Add(new ClickGestureRecognizer() { Command = command, Buttons = ButtonsMask.Primary });
+        }
 
 		async Task ExecuteTapGestureRecognizer(View view)
 		{
@@ -462,7 +506,7 @@ namespace DLToolkit.Forms.Controls
 						view.BackgroundColor = flowListView.FlowTappedBackgroundColor;
 					}
 
-					flowListView.FlowPerformTap(view.BindingContext);
+					flowListView.FlowPerformTap(view, view.BindingContext);
 				}
 				finally
 				{
@@ -474,6 +518,6 @@ namespace DLToolkit.Forms.Controls
 				}
 			}
 		}
-}
+	}
 }
 

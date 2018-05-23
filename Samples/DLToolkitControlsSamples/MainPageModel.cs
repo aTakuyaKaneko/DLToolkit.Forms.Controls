@@ -5,6 +5,9 @@ using System.Linq;
 using System.Windows.Input;
 using Xamvvm;
 using Xamarin.Forms;
+using DLToolkitControlsSamples.SamplesFlowListView;
+using DLToolkitControlsSamples.SamplesRecyclerView;
+using DLToolkitControlsSamples.SamplesImageCropView;
 
 namespace DLToolkitControlsSamples
 {
@@ -23,6 +26,28 @@ namespace DLToolkitControlsSamples
 			});
 
 			var menuItems = new List<MenuItem>() {
+
+                new MenuItem() {
+                    Section = "ImageCropView",
+                    Title = "Simple example",
+                    Detail = "Simplest example",
+                    Command = new BaseCommand(async (param) =>
+                    {
+                        var page = this.GetPageFromCache<ImageCropViewExampleModel>();
+                        await this.PushPageAsync(page);
+                    }),
+                },
+
+                new MenuItem() {
+                    Section = "RecyclerView",
+                    Title = "Simple example",
+                    Detail = "Simplest example",
+                    Command = new BaseCommand(async (param) =>
+                    {
+                        var page = this.GetPageFromCache<SimpleRecyclerViewPageModel>();
+                        await this.PushPageAsync(page, (model) => model.ReloadData());
+                    }),
+                },
 				
 				new MenuItem() {
 					Section = "FlowListView",
@@ -34,6 +59,18 @@ namespace DLToolkitControlsSamples
 						await this.PushPageAsync(page, (model) => model.ReloadData());
 					}),
 				},	
+
+
+                new MenuItem() {
+                    Section = "FlowListView",
+                    Title = "Simple total example",
+                    Detail = "Simplest total row example",
+                    Command = new BaseCommand(async (param) =>
+                    {
+                        var page = this.GetPageFromCache<TotalRowSamplePageModel>();
+                        await this.PushPageAsync(page, (model) => model.ReloadData());
+                    }),
+                },  
 
 				new MenuItem() {
 					Section = "FlowListView",
@@ -59,11 +96,33 @@ namespace DLToolkitControlsSamples
 
 				new MenuItem() {
 					Section = "FlowListView",
+					Title = "Infinite Loading example",
+					Detail = "Infinite Loading example",
+					Command = new BaseCommand(async (param) =>
+					{
+                        var page = this.GetPageFromCache<InfiniteLoadingPageModel>();
+						await this.PushPageAsync(page, (model) => model.ReloadData());
+					}),
+				},
+
+				new MenuItem() {
+					Section = "FlowListView",
 					Title = "Grouping example",
 					Detail = "Grouping example",
 					Command = new BaseCommand(async (param) =>
 					{
 						var page = this.GetPageFromCache<GroupingPageModel>();
+						await this.PushPageAsync(page, (model) => model.ReloadData());
+					}),
+				},
+
+				new MenuItem() {
+					Section = "FlowListView",
+					Title = "Advanced Grouping example",
+					Detail = "Advanced Grouping example",
+					Command = new BaseCommand(async (param) =>
+					{
+						var page = this.GetPageFromCache<GroupingAdvancedPageModel>();
 						await this.PushPageAsync(page, (model) => model.ReloadData());
 					}),
 				},

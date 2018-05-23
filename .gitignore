@@ -43,3 +43,22 @@ Thumbs.db
 Examples/Droid/Resources/Resource.designer.cs
 
 .droidres/.dltoolkit.forms.controls.droidres.db
+
+TagEntryView/DLToolkit.Forms.Controls.TagEntryView/project.lock.json
+
+FlowListView/DLToolkit.Forms.Controls.FlowListView/project.lock.json
+
+.vs/slnx.sqlite
+
+.vs/ProjectSettings.json
+FlowListView/DLToolkit.Forms.Controls.FlowListView/DLToolkit.Forms.Controls.FlowListView.nuget.props
+FlowListView/DLToolkit.Forms.Controls.FlowListView/DLToolkit.Forms.Controls.FlowListView.nuget.targets
+FlowListView/DLToolkit.Forms.Controls.FlowListView/DLToolkit.Forms.Controls.FlowListView.nuget.targets
+
+*.nuget.targets
+*.nuget.props
+project.lock.json
+
+FlowListView/DLToolkit.Forms.Controls.FlowListView/AssemblyTFMAttribute.cs
+*.props
+TagEntryView/DLToolkit.Forms.Controls.TagEntryView/DLToolkit.Forms.Controls.TagEntryView.nuget.props

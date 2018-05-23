@@ -1,20 +1,22 @@
-﻿using System;
-using Xamarin.Forms;
+﻿    using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Linq;
-using System.Windows.Input;
 using System.Reflection;
+using System.Windows.Input;
+using Xamarin.Forms;
+using System.Threading.Tasks;
 
 namespace DLToolkit.Forms.Controls
 {
 	/// <summary>
 	/// FlowListView.
 	/// </summary>
-	public class FlowListView : ListView, IDisposable
+	[Helpers.FlowListView.Preserve(AllMembers = true)]
+    public class FlowListView : ListView, IDisposable
 	{
 		/// <summary>
 		/// Used to avoid linking issues
@@ -22,9 +24,11 @@ namespace DLToolkit.Forms.Controls
 		/// </summary>
 		public static void Init()
 		{
-			#pragma warning disable 0219
-			var dummy = new FlowListView();
-			#pragma warning restore 0219
+#pragma warning disable 0219
+            var dummy1 = typeof(FlowListView);
+            var dummy2 = typeof(FlowListViewInternalCell);
+            var dummy3 = typeof(FlowDataTemplateSelector);
+#pragma warning restore 0219
 		}
 
 		/// <summary>
@@ -32,41 +36,42 @@ namespace DLToolkit.Forms.Controls
 		/// </summary>
 		public FlowListView() : base(ListViewCachingStrategy.RecycleElement)
 		{
-            InitialSetup();
+			InitialSetup();
 		}
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="T:DLToolkit.Forms.Controls.FlowListView"/> class.
 		/// </summary>
 		/// <param name="cachingStrategy">Caching strategy.</param>
-        public FlowListView(ListViewCachingStrategy cachingStrategy) : base(cachingStrategy)
-        {
-            InitialSetup();
-        }
+		public FlowListView(ListViewCachingStrategy cachingStrategy) : base(cachingStrategy)
+		{
+			InitialSetup();
+		}
 
-        private void InitialSetup()
-        {
-            RefreshDesiredColumnCount();
-            SizeChanged += FlowListSizeChanged;
-            PropertyChanged += FlowListViewPropertyChanged;
-            PropertyChanging += FlowListViewPropertyChanging;
+		private void InitialSetup()
+		{
+			RefreshDesiredColumnCount();
+			SizeChanged += FlowListSizeChanged;
+			PropertyChanged += FlowListViewPropertyChanged;
+			PropertyChanging += FlowListViewPropertyChanging;
 
-            FlowColumnExpand = FlowColumnExpand.None;
+			FlowColumnExpand = FlowColumnExpand.None;
 			FlowColumnCount = default(int?);
-            FlowColumnMinWidth = 50d;
-            FlowRowBackgroundColor = Color.Transparent;
-            FlowTappedBackgroundColor = Color.Transparent;
-            FlowTappedBackgroundDelay = 0;
+			FlowColumnMinWidth = 50d;
+			FlowRowBackgroundColor = Color.Transparent;
+			FlowTappedBackgroundColor = Color.Transparent;
+			FlowTappedBackgroundDelay = 0;
 
             var flowListViewRef = new WeakReference<FlowListView>(this);
-            ItemTemplate = new DataTemplate(() => new FlowListViewInternalCell(flowListViewRef));
+			ItemTemplate = new FlowDataTemplateSelector(flowListViewRef);
             SeparatorVisibility = SeparatorVisibility.None;
             SeparatorColor = Color.Transparent;
+            GroupDisplayBinding = new Binding(nameof(FlowGroup.Key));
 
-            ItemSelected += FlowListViewItemSelected;
-            ItemAppearing += FlowListViewItemAppearing;
-            ItemDisappearing += FlowListViewItemDisappearing;
-        }
+			ItemSelected += FlowListViewItemSelected;
+			ItemAppearing += FlowListViewItemAppearing;
+			ItemDisappearing += FlowListViewItemDisappearing;
+		}
 
 		/// <summary>
 		/// The flow group grouping key selector property.
@@ -85,7 +90,69 @@ namespace DLToolkit.Forms.Controls
 			set { SetValue(FlowColumnExpandProperty, value); }
 		}
 
-		BindingBase _flowGroupDisplayBinding;
+		BindingBase _flowGroupColumnCountBinding;
+
+		/// <summary>
+		/// Gets or sets the flow column count.
+		/// </summary>
+		/// <value>The flow column count binding.</value>
+		public BindingBase FlowGroupColumnCountBinding
+		{
+			get { return _flowGroupColumnCountBinding; }
+			set
+			{
+				if (_flowGroupColumnCountBinding == value)
+					return;
+
+				OnPropertyChanging();
+				_flowGroupColumnCountBinding = value;
+				OnPropertyChanged();
+			}
+		}
+
+        BindingBase _flowItemVisibleBinding;
+
+		/// <summary>
+		/// Gets or sets the flow item is visible.
+		/// </summary>
+		/// <value>The flow item is visible.</value>
+		public BindingBase FlowItemVisibleBinding
+		{
+			get { return _flowItemVisibleBinding; }
+			set
+			{
+				if (_flowItemVisibleBinding == value)
+					return;
+
+				OnPropertyChanging();
+				_flowItemVisibleBinding = value;
+				OnPropertyChanged();
+			}
+		}
+
+        BindingBase _flowGroupHeaderModelBinding;
+
+        /// <summary>
+        /// Gets or sets the flow group model binding.
+        /// It will be available as Model property in your
+        /// group header BindingContext
+        /// </summary>
+        /// <value>The flow group model binding.</value>
+        public BindingBase FlowGroupHeaderModelBinding
+        {
+            get { return _flowGroupHeaderModelBinding; }
+            set
+            {
+                if (_flowGroupHeaderModelBinding == value)
+                    return;
+
+                OnPropertyChanging();
+                _flowGroupHeaderModelBinding = value;
+                OnPropertyChanged();
+            }
+        }
+
+        BindingBase _flowGroupDisplayBinding = new Binding(nameof(FlowGroup.Key));
 
 		/// <summary>
 		/// Gets or sets the flow group display binding.
@@ -103,10 +170,7 @@ namespace DLToolkit.Forms.Controls
 				_flowGroupDisplayBinding = value;
 				OnPropertyChanged();
 
-				if (value != null)
-					GroupDisplayBinding = new Binding("Key");
-				else
-					GroupDisplayBinding = default(Binding);
+				GroupDisplayBinding = value;
 			}
 		}
 
@@ -128,17 +192,22 @@ namespace DLToolkit.Forms.Controls
 				_flowGroupShortNameBinding = value;
 				OnPropertyChanged();
 
-				if (value != null)
-					GroupShortNameBinding = new Binding("Key");
-				else
-					GroupShortNameBinding = default(Binding);
+				GroupShortNameBinding = value;
 			}
 		}
 
-		/// <summary>
-		/// The flow column count property.
-		/// </summary>
-		public static BindableProperty FlowColumnCountProperty = BindableProperty.Create(nameof(FlowColumnCount), typeof(int?), typeof(FlowListView), default(int?));
+        /// <summary>
+        /// The flow column count property.
+        /// </summary>
+        public static BindableProperty FlowColumnCountProperty = BindableProperty.Create(nameof(FlowColumnCount), typeof(int?), typeof(FlowListView), default(int?), propertyChanged: (bindable, oldValue, newValue) =>
+        {
+            var list = (FlowListView)bindable;
+            if (list.FlowItemsSource == null)
+                return;
+
+            if (!list.FlowColumnCount.HasValue || list.FlowColumnCount != list.FlowDesiredColumnCount)
+                list.ForceReload();
+        });
 
 		/// <summary>
 		/// Enables or disables FlowListView auto/manual column count.
@@ -150,6 +219,25 @@ namespace DLToolkit.Forms.Controls
 		{
 			get { return (int?)GetValue(FlowColumnCountProperty); }
 			set { SetValue(FlowColumnCountProperty, value); }
+		}
+
+        /// <summary>
+        /// The flow desired column count property key.
+        /// </summary>
+        public static readonly BindablePropertyKey FlowDesiredColumnCountPropertyKey = BindableProperty.CreateReadOnly(nameof(FlowDesiredColumnCount), typeof(int), typeof(FlowListView), 1, BindingMode.OneWayToSource);
+		/// <summary>
+		/// The flow column count property.
+		/// </summary>
+		public static readonly BindableProperty FlowDesiredColumnCountProperty = FlowDesiredColumnCountPropertyKey.BindableProperty;
+
+		/// <summary>
+		/// Flow Column count desired.
+		/// </summary>
+		/// <value>The flow column count desired.</value>
+		public int FlowDesiredColumnCount
+		{
+			get { return (int)GetValue(FlowDesiredColumnCountProperty); }
+			private set { SetValue(FlowDesiredColumnCountPropertyKey, value > 0 ? value : 1); }
 		}
 
 		/// <summary>
@@ -219,7 +307,7 @@ namespace DLToolkit.Forms.Controls
 		public Color FlowTappedBackgroundColor
 		{
 			get { return (Color)GetValue(FlowTappedBackgroundColorProperty); }
-			set { SetValue(FlowTappedBackgroundColorProperty, value);  }
+			set { SetValue(FlowTappedBackgroundColorProperty, value); }
 		}
 
 		/// <summary>
@@ -234,7 +322,7 @@ namespace DLToolkit.Forms.Controls
 		public int FlowTappedBackgroundDelay
 		{
 			get { return (int)GetValue(FlowTappedBackgroundDelayProperty); }
-			set { SetValue(FlowTappedBackgroundDelayProperty, value);  }
+			set { SetValue(FlowTappedBackgroundDelayProperty, value); }
 		}
 
 		/// <summary>
@@ -249,7 +337,7 @@ namespace DLToolkit.Forms.Controls
 		public object FlowLastTappedItem
 		{
 			get { return GetValue(FlowLastTappedItemProperty); }
-			private set { SetValue(FlowLastTappedItemProperty, value);  }
+			private set { SetValue(FlowLastTappedItemProperty, value); }
 		}
 
 		/// <summary>
@@ -300,13 +388,13 @@ namespace DLToolkit.Forms.Controls
 		/// <summary>
 		/// FlowItemsSourceProperty.
 		/// </summary>
-		public static BindableProperty FlowItemsSourceProperty = BindableProperty.Create(nameof(FlowItemsSource), typeof(IList), typeof(FlowListView), default(IList));
+		public static BindableProperty FlowItemsSourceProperty = BindableProperty.Create(nameof(FlowItemsSource), typeof(ICollection), typeof(FlowListView), default(ICollection));
 
 		/// <summary>
 		/// Gets FlowListView items source.
 		/// </summary>
 		/// <value>FlowListView items source.</value>
-		public IList FlowItemsSource
+		public ICollection FlowItemsSource
 		{
 			get { return (IList)GetValue(FlowItemsSourceProperty); }
 			set { SetValue(FlowItemsSourceProperty, value); }
@@ -331,9 +419,101 @@ namespace DLToolkit.Forms.Controls
 				return (DataTemplate)GetValue(FlowColumnTemplateProperty);
 			}
 			set
-			{		
+			{
 				SetValue(FlowColumnTemplateProperty, value);
 			}
+		}
+
+		/// <summary>
+		/// The is loading infinite is enabled property.
+		/// </summary>
+		public static BindableProperty FlowIsLoadingInfiniteEnabledProperty = BindableProperty.Create(nameof(FlowIsLoadingInfiniteEnabled), typeof(bool), typeof(FlowListView), false);
+
+		/// <summary>
+		/// Gets or sets FlowIsLoadingInfiniteEnabled loading is enabled.
+		/// </summary>
+		/// <value>FlowIsLoadingInfiniteEnabled loading is enabled.</value>
+		public bool FlowIsLoadingInfiniteEnabled
+		{
+			get { return (bool)GetValue(FlowIsLoadingInfiniteEnabledProperty); }
+			set { SetValue(FlowIsLoadingInfiniteEnabledProperty, value); }
+		}
+
+		/// <summary>
+		/// The is loading infinite is running property.
+		/// </summary>
+		public static BindableProperty FlowIsLoadingInfiniteProperty = BindableProperty.Create(nameof(FlowIsLoadingInfinite), typeof(bool), typeof(FlowListView), false, BindingMode.TwoWay);
+
+		/// <summary>
+		/// Gets or sets FlowIsLoadingInfinite loading is running.
+		/// </summary>
+		/// <value>FlowIsLoadingInfinite loading is running</value>
+		public bool FlowIsLoadingInfinite
+		{
+			get { return (bool)GetValue(FlowIsLoadingInfiniteProperty); }
+			set { SetValue(FlowIsLoadingInfiniteProperty, value); }
+		}
+
+		/// <summary>
+		/// The total of records to loading infinite property.
+		/// </summary>
+		public static BindableProperty FlowTotalRecordsProperty = BindableProperty.Create(nameof(FlowTotalRecords), typeof(int), typeof(FlowListView), 0);
+
+		/// <summary>
+		/// Gets or sets FlowTotalRecords total records to loading infinite.
+		/// It defines how columns should expand when 
+		/// row current column count is less than defined columns templates count
+		/// </summary>
+		/// <value>FlowTotalRecords total records to loading infinite.</value>
+		public int FlowTotalRecords
+		{
+			get { return (int)GetValue(FlowTotalRecordsProperty); }
+			set { SetValue(FlowTotalRecordsProperty, value); }
+		}
+
+		/// <summary>
+		/// FlowLoadingTemplateProperty.
+		/// </summary>
+		public static readonly BindableProperty FlowLoadingTemplateProperty = BindableProperty.Create(nameof(FlowLoadingTemplate), typeof(DataTemplate), typeof(FlowListView), default(DataTemplate));
+
+		/// <summary>
+		/// Gets or sets FlowLoadingTemplate loading template (ViewCell type).
+		/// </summary>
+		/// <value>FlowLoadingTemplate loading template (ViewCell type).</value>
+		public DataTemplate FlowLoadingTemplate
+		{
+			get { return (DataTemplate)GetValue(FlowLoadingTemplateProperty); }
+			set { SetValue(FlowLoadingTemplateProperty, value); }
+		}
+
+		/// <summary>
+		/// FlowLoadingCommandProperty.
+		/// </summary>
+		public static BindableProperty FlowLoadingCommandProperty = BindableProperty.Create(nameof(FlowLoadingCommand), typeof(ICommand), typeof(FlowListView), null);
+
+		/// <summary>
+		/// Gets or sets FlowLoadingCommand loading execute command.
+		/// </summary>
+		/// <value>FlowLoadingCommand loading execute command.</value>
+		public ICommand FlowLoadingCommand
+		{
+			get { return (ICommand)GetValue(FlowLoadingCommandProperty); }
+			set { SetValue(FlowLoadingCommandProperty, value); }
+		}
+
+		/// <summary>
+		/// FlowEmptyTemplateProperty.
+		/// </summary>
+		public static readonly BindableProperty FlowEmptyTemplateProperty = BindableProperty.Create(nameof(FlowEmptyTemplate), typeof(DataTemplate), typeof(FlowListView), default(DataTemplate));
+
+		/// <summary>
+		/// Gets or sets FlowEmptyTemplate empty data template (ViewCell type).
+		/// </summary>
+		/// <value>FlowEmptyTemplate empty data template (ViewCell type).</value>
+		public DataTemplate FlowEmptyTemplate
+		{
+			get { return (DataTemplate)GetValue(FlowEmptyTemplateProperty); }
+			set { SetValue(FlowEmptyTemplateProperty, value); }
 		}
 
 		/// <summary>
@@ -341,6 +521,8 @@ namespace DLToolkit.Forms.Controls
 		/// </summary>
 		public void ForceReload(bool updateOnly = false)
 		{
+            System.Diagnostics.Debug.WriteLine("ForceReload");
+
 			if (updateOnly)
 			{
 				if (IsGroupingEnabled)
@@ -350,7 +532,7 @@ namespace DLToolkit.Forms.Controls
 			}
 			else
 			{
-				RefreshDesiredColumnCount();
+                RefreshDesiredColumnCount();
 
 				if (IsGroupingEnabled)
 					ReloadGroupedContainerList();
@@ -359,36 +541,32 @@ namespace DLToolkit.Forms.Controls
 			}
 		}
 
-		internal void FlowPerformTap(object item)
+        /// <summary>
+        /// OnSizeAllocated.
+        /// </summary>
+        /// <param name="width">Width.</param>
+        /// <param name="height">Height.</param>
+		protected override void OnSizeAllocated(double width, double height)
+		{
+			base.OnSizeAllocated(width, height);
+
+			RefreshDesiredColumnCount();
+		}
+
+		internal void FlowPerformTap(object sender, object item)
 		{
 			FlowLastTappedItem = item;
 
 			EventHandler<ItemTappedEventArgs> handler = FlowItemTapped;
 			if (handler != null)
 			{
-				handler(this, new ItemTappedEventArgs(null, item));
+				handler(this, new ItemTappedEventArgs(sender, item));
 			}
 
 			var command = FlowItemTappedCommand;
-			if (command != null && command.CanExecute(item)) 
+			if (command != null && command.CanExecute(item))
 			{
 				command.Execute(item);
-			}
-		}
-
-		int desiredColumnCount;
-		internal int DesiredColumnCount
-		{
-			get
-			{
-				if (desiredColumnCount == 0)
-					return 1;
-				
-				return desiredColumnCount;
-			}
-			set
-			{
-				desiredColumnCount = value;
 			}
 		}
 
@@ -396,16 +574,27 @@ namespace DLToolkit.Forms.Controls
 		{
 			if (!FlowColumnCount.HasValue)
 			{
+                var oldColumnCount = FlowDesiredColumnCount;
 				double listWidth = Math.Max(Math.Max(Width, WidthRequest), MinimumWidthRequest);
 
 				if (listWidth > 0)
 				{
-					DesiredColumnCount = (int)Math.Floor(listWidth / FlowColumnMinWidth);
+					FlowDesiredColumnCount = (int)Math.Floor(listWidth / FlowColumnMinWidth);
 				}
+
+                if (ItemsSource != null && oldColumnCount != FlowDesiredColumnCount)
+                {
+					foreach (var item in ItemsSource)
+					{
+						var internalModel = item as FlowGroupColumn;
+						if (internalModel != null)
+							internalModel.ForceInvalidateColumns = true;
+					}
+                }
 			}
 			else
 			{
-				DesiredColumnCount = FlowColumnCount.Value;
+				FlowDesiredColumnCount = FlowColumnCount.Value;
 			}
 		}
 
@@ -426,11 +615,11 @@ namespace DLToolkit.Forms.Controls
 					}
 
 					lastWidth = listWidth;
-				}	
+				}
 			}
 		}
 
-		private void FlowListViewPropertyChanging(object sender, PropertyChangingEventArgs e)
+		private void FlowListViewPropertyChanging(object sender, Xamarin.Forms.PropertyChangingEventArgs e)
 		{
 			if (e.PropertyName == FlowItemsSourceProperty.PropertyName)
 			{
@@ -440,12 +629,14 @@ namespace DLToolkit.Forms.Controls
 
 				if (IsGroupingEnabled)
 				{
-					var groupedSource = FlowItemsSource as IEnumerable<INotifyCollectionChanged>;
+					var groupedSource = FlowItemsSource;
 					if (groupedSource != null)
 					{
 						foreach (var gr in groupedSource)
 						{
-							gr.CollectionChanged -= FlowItemsSourceCollectionChanged;
+                            var collectionChanged = gr as INotifyCollectionChanged;
+                            if (collectionChanged != null)
+                                collectionChanged.CollectionChanged -= FlowItemsSourceCollectionChanged;
 						}
 					}
 				}
@@ -456,26 +647,28 @@ namespace DLToolkit.Forms.Controls
 		{
 			if (e.PropertyName == FlowItemsSourceProperty.PropertyName)
 			{
+                if (FlowColumnTemplate == null || FlowItemsSource == null)
+                {
+                    ItemsSource = null;
+                    return;
+                }
+
 				var flowItemSource = FlowItemsSource as INotifyCollectionChanged;
 				if (flowItemSource != null)
 					flowItemSource.CollectionChanged += FlowItemsSourceCollectionChanged;
 
 				if (IsGroupingEnabled)
 				{
-					var groupedSource = FlowItemsSource as IEnumerable<INotifyCollectionChanged>;
+					var groupedSource = FlowItemsSource;
 					if (groupedSource != null)
 					{
 						foreach (var gr in groupedSource)
 						{
-							gr.CollectionChanged += FlowItemsSourceCollectionChanged;
+                            var collectionChanged = gr as INotifyCollectionChanged;
+                            if (collectionChanged != null)
+                                collectionChanged.CollectionChanged += FlowItemsSourceCollectionChanged;
 						}
 					}
-				}
-
-				if (FlowColumnTemplate == null || FlowItemsSource == null)
-				{
-					ItemsSource = null;
-					return;
 				}
 
 				ForceReload();
@@ -487,22 +680,35 @@ namespace DLToolkit.Forms.Controls
 			ForceReload(updateOnly: true);
 		}
 
-		private void FlowListViewItemSelected (object sender, SelectedItemChangedEventArgs e)
+		private void FlowListViewItemSelected(object sender, SelectedItemChangedEventArgs e)
 		{
 			SelectedItem = null;
 		}
 
-		private void FlowListViewItemAppearing (object sender, ItemVisibilityEventArgs e)
+		private void FlowListViewItemAppearing(object sender, ItemVisibilityEventArgs e)
 		{
+			if (IsRefreshing || FlowIsLoadingInfinite || ItemsSource == null || !ItemsSource.Cast<object>().Any())
+				return;
+
+			if (!FlowIsLoadingInfinite && e.Item is FlowLoadingModel)
+			{
+				FlowIsLoadingInfinite = true;
+
+				if (FlowLoadingCommand != null && FlowLoadingCommand.CanExecute(null))
+				{
+					FlowLoadingCommand.Execute(null);
+				}
+			}
+
+			EventHandler<ItemVisibilityEventArgs> handler = FlowItemAppearing;
+			var command = FlowItemAppearingCommand;
+
+			if (handler == null && command == null)
+				return;
+			
 			var container = e.Item as IEnumerable;
 			if (container != null)
 			{
-				EventHandler<ItemVisibilityEventArgs> handler = FlowItemAppearing;
-				var command = FlowItemAppearingCommand;
-
-				if (handler == null && command == null)
-					return;
-
 				foreach (var item in container)
 				{
 					handler?.Invoke(this, new ItemVisibilityEventArgs(item));
@@ -510,6 +716,13 @@ namespace DLToolkit.Forms.Controls
 					if (command != null && command.CanExecute(item))
 						command.Execute(item);
 				}
+			}
+			else
+			{
+				handler?.Invoke(this, new ItemVisibilityEventArgs(e.Item));
+
+				if (command != null && command.CanExecute(e.Item))
+					command.Execute(e.Item);
 			}
 		}
 
@@ -534,65 +747,72 @@ namespace DLToolkit.Forms.Controls
 			}
 		}
 
-		private ObservableCollection<ObservableCollection<object>> GetContainerList()
+		private FlowObservableCollection<object> GetContainerList()
 		{
-			var colCount = DesiredColumnCount;
+			var colCount = FlowDesiredColumnCount;
+			var tempList = new List<object>();
 
-			int capacity = (FlowItemsSource.Count / colCount) +
-				(FlowItemsSource.Count % colCount) > 0 ? 1 : 0;
-			
-			var tempList = new List<ObservableCollection<object>>(capacity);
-			int position = -1;
+			var flowItemVisibleBindingPropertyName = (FlowItemVisibleBinding as Binding)?.Path;
 
-			for (int i = 0; i < FlowItemsSource.Count; i++)
+			if (FlowItemsSource.Count <= 0 && FlowEmptyTemplate != null)
 			{
-				if (i % colCount == 0)
-				{
-					position++;
+				tempList.Add(new FlowEmptyModel());
+			}
+			else
+			{
+				int position = -1;
+                var i = 0;
+				var ix = 0;
 
-					tempList.Add(new ObservableCollection<object>() {
-							FlowItemsSource[i]
-						});
-				}
-				else
+				foreach (var item in FlowItemsSource)
 				{
-					var exContItm = tempList[position];
-					exContItm.Add(FlowItemsSource[i]);
+					if (flowItemVisibleBindingPropertyName != null)
+					{
+						var itemVisibleBindingPropertyName = item.GetType().GetRuntimeProperty(flowItemVisibleBindingPropertyName);
+
+						if (itemVisibleBindingPropertyName != null)
+						{
+                            if (!(bool)itemVisibleBindingPropertyName.GetValue(item))
+                            {
+                                i++;
+                                continue;
+                            }
+						}
+					}
+
+					if (ix % colCount == 0)
+					{
+						position++;
+
+						tempList.Add(new FlowObservableCollection<object>() { item });
+					}
+					else
+					{
+                        var exContItm = (tempList[position] as IList);
+						exContItm?.Add(item);
+					}
+
+                    i++;
+					ix++;
+				}
+
+				if (FlowIsLoadingInfiniteEnabled && FlowItemsSource.Count < FlowTotalRecords)
+				{
+					tempList.Add(new FlowLoadingModel());
 				}
 			}
 
-			return new ObservableCollection<ObservableCollection<object>>(tempList);
+			return new FlowObservableCollection<object>(tempList);
 		}
 
 		private void UpdateContainerList()
 		{
-			var currentSource = ItemsSource as ObservableCollection<ObservableCollection<object>>;
+			var currentSource = ItemsSource as FlowObservableCollection<object>;
 
 			if (currentSource != null && currentSource.Count > 0)
 			{
 				var tempList = GetContainerList();
-
-				bool structureIsChanged = false;
-				for (int i = 0; i < tempList.Count; i++)
-				{
-					if (currentSource.Count <= i)
-					{
-						currentSource.Add(tempList[i]);
-					}
-					else
-					{
-						if (structureIsChanged || tempList[i].Any(v => !(currentSource[i].Contains(v))))
-						{
-							structureIsChanged = true;
-							currentSource[i] = tempList[i];
-						}
-					}
-				}
-
-				while (currentSource.Count > tempList.Count)
-				{
-					currentSource.RemoveAt(currentSource.Count - 1);
-				}
+				currentSource.Sync(tempList);
 			}
 			else
 			{
@@ -602,77 +822,39 @@ namespace DLToolkit.Forms.Controls
 
 		private void ReloadContainerList()
 		{
+			ItemAppearing -= FlowListViewItemAppearing;
 			ItemsSource = GetContainerList();
+			ItemAppearing += FlowListViewItemAppearing;
 		}
 
 		private void UpdateGroupedContainerList()
 		{
-			var currentSource = ItemsSource as ObservableCollection<FlowGroup>;
+			var currentSource = ItemsSource as FlowObservableCollection<FlowGroup>;
 
 			if (currentSource != null && currentSource.Count > 0)
 			{
 				var tempList = GetGroupedContainerList();
-
-				// GROUPS HEADERS
-				bool structureIsChanged = false;
-				for (int i = 0; i < tempList.Count; i++)
-				{
-					if (currentSource.Count <= i)
-					{
-						currentSource.Add(tempList[i]);
-					}
-					else
-					{
-						if (structureIsChanged || tempList[i].Any(v => !(currentSource[i].Contains(v))))
-						{
-							structureIsChanged = true;
-							currentSource[i] = tempList[i];
-						}
-					}
-				}
-
-				while (currentSource.Count > tempList.Count)
-				{
-					currentSource.RemoveAt(currentSource.Count - 1);
-				}
-
-				// GROUPS ITEMS
-				for (int grId = 0; grId < tempList.Count; grId++)
-				{
-					bool groupStructureIsChanged = false;
-					for (int i = 0; i < tempList[grId].Count; i++)
-					{
-						if (currentSource[grId].Count <= i)
-						{
-							currentSource[grId].Add(tempList[grId][i]);
-						}
-						else
-						{
-							if (groupStructureIsChanged || tempList[grId][i].Any(v => !(currentSource[grId][i].Contains(v))))
-							{
-								groupStructureIsChanged = true;
-								currentSource[grId][i] = tempList[grId][i];
-							}
-						}
-					}
-
-					while (currentSource[grId].Count > tempList[grId].Count)
-					{
-						currentSource[grId].RemoveAt(currentSource[grId].Count - 1);
-					}
-				}
-			}
+				currentSource.Sync(tempList);
+            }
 			else
 			{
 				ReloadGroupedContainerList();
 			}
 		}
 
-		private ObservableCollection<FlowGroup> GetGroupedContainerList()
+		private FlowObservableCollection<FlowGroup> GetGroupedContainerList()
 		{
-			var colCount = DesiredColumnCount;
+			var colCount = FlowDesiredColumnCount;
 			var flowGroupsList = new List<FlowGroup>(FlowItemsSource.Count);
 			var groupDisplayPropertyName = (FlowGroupDisplayBinding as Binding)?.Path;
+            var groupModelPropertyName = (FlowGroupHeaderModelBinding as Binding)?.Path;
+			var groupColumnCountPropertyName = (FlowGroupColumnCountBinding as Binding)?.Path;
+			var flowItemVisibleBindingPropertyName = (FlowItemVisibleBinding as Binding)?.Path;
+
+			if (FlowItemsSource.Count <= 0 && FlowEmptyTemplate != null)
+			{
+                flowGroupsList.Add(new FlowGroup(null, null) { new FlowEmptyModel() });
+			}
 
 			foreach (var groupContainer in FlowItemsSource)
 			{
@@ -684,12 +866,14 @@ namespace DLToolkit.Forms.Controls
 				}
 				else
 				{
-					var gr = groupContainer as IList;
+					var gr = groupContainer as ICollection;
 					if (gr != null)
 					{
 						var type = gr?.GetType();
 
 						object groupKeyValue = null;
+                        object groupModelValue = null;
+						int? groupColumnCount = colCount;
 
 						if (type != null && groupDisplayPropertyName != null)
 						{
@@ -697,22 +881,67 @@ namespace DLToolkit.Forms.Controls
 							groupKeyValue = groupDisplayProperty?.GetValue(gr);
 						}
 
-						var flowGroup = new FlowGroup(groupKeyValue);
+                        if (type != null && groupModelPropertyName != null)
+                        {
+                            PropertyInfo groupModelProperty = type?.GetRuntimeProperty(groupModelPropertyName);
+                            groupModelValue = groupModelProperty?.GetValue(gr);
+                        }
 
-						int position = -1;
-
-						for (int i = 0; i < gr.Count; i++)
+						if (type != null && groupColumnCountPropertyName != null)
 						{
-							if (i % colCount == 0)
-							{
-								position++;
+							PropertyInfo groupColumnCountProperty = type?.GetRuntimeProperty(groupColumnCountPropertyName);
 
-								flowGroup.Add(new ObservableCollection<object>() { gr[i] });
-							}
-							else
+							groupColumnCount = (int?)groupColumnCountProperty?.GetValue(gr);
+							groupColumnCount = groupColumnCount.GetValueOrDefault() > 0 ? groupColumnCount.Value : colCount;
+						}
+
+						if (groupKeyValue == null)
+						{
+							groupKeyValue = groupContainer;
+						}
+
+                        var flowGroup = new FlowGroup(groupKeyValue, groupModelValue);
+
+						if (gr.Count <= 0 && FlowEmptyTemplate != null)
+						{
+							flowGroup.Add(new FlowEmptyModel());
+						}
+						else
+						{
+							int position = -1;
+							var ix = 0;
+                            var i = 0;
+
+							foreach (var item in gr)
 							{
-								var exContItm = flowGroup[position];
-								exContItm.Add(gr[i]);
+								if (flowItemVisibleBindingPropertyName != null)
+								{
+									var itemVisibleBindingPropertyName = item.GetType().GetRuntimeProperty(flowItemVisibleBindingPropertyName);
+
+									if (itemVisibleBindingPropertyName != null)
+									{
+                                        if (!(bool)itemVisibleBindingPropertyName.GetValue(item))
+                                        {
+                                            i++;
+                                            continue;
+                                        }
+									}
+								}
+
+								if (ix % groupColumnCount == 0)
+								{
+									position++;
+
+									flowGroup.Add(new FlowGroupColumn(groupColumnCount.GetValueOrDefault()) { item });
+								}
+								else
+								{
+									var exContItm = (flowGroup[position] as IList);
+									exContItm?.Add(item);
+								}
+
+								ix++;
+                                i++;
 							}
 						}
 
@@ -721,12 +950,31 @@ namespace DLToolkit.Forms.Controls
 				}
 			}
 
-			return new ObservableCollection<FlowGroup>(flowGroupsList);
+			if (FlowIsLoadingInfiniteEnabled && FlowItemsSource.Cast<object>().Sum(s => (s as IList).Count) < FlowTotalRecords)
+			{
+				flowGroupsList.LastOrDefault()?.Add(new FlowLoadingModel());
+			}
+
+			return new FlowObservableCollection<FlowGroup>(flowGroupsList);
 		}
 
 		private void ReloadGroupedContainerList()
 		{
-			ItemsSource = GetGroupedContainerList();
+			ItemAppearing -= FlowListViewItemAppearing;
+            var ctrList = GetGroupedContainerList();
+
+            try
+            {
+                
+                ItemsSource = ctrList;
+            }
+            catch (NullReferenceException ex)
+            {
+                System.Diagnostics.Debug.WriteLine(ex);
+                //TODO HACK some strange Xamarin.Forms exceptionw when using grouping + fast scroll shortname list  !?
+            }
+
+			ItemAppearing += FlowListViewItemAppearing;
 		}
 
 		/// <summary>
@@ -739,14 +987,14 @@ namespace DLToolkit.Forms.Controls
 		{
 			if (!IsGroupingEnabled)
 			{
-				var castedItemsSource = ItemsSource as IEnumerable<IEnumerable<object>>;
-				var internalItem = castedItemsSource?.FirstOrDefault(v => v.Contains(item));
+				var castedItemsSource = ItemsSource as IEnumerable<object>;
+                var internalItem = castedItemsSource?.FirstOrDefault(v => v == item || ((v as IEnumerable)?.Cast<object>().Contains(item)).GetValueOrDefault());
 				ScrollTo(internalItem, position, animated);
 			}
 			else
 			{
-				var castedItemsSource = ItemsSource as ICollection<FlowGroup>;
-				var internalItem = castedItemsSource?.Select(v => v.FirstOrDefault(itm => itm.Contains(item))).FirstOrDefault(v => v != null);
+				var castedItemsSource = ItemsSource as IEnumerable<FlowGroup>;
+				var internalItem = castedItemsSource?.Select(v => v.FirstOrDefault(itm => ((itm as IEnumerable)?.Cast<object>().Contains(item)).GetValueOrDefault())).FirstOrDefault(v => v != null);
 				ScrollTo(internalItem, position, animated);
 			}
 		}
